@@ -8,6 +8,13 @@ const client = await createClient()
   .connect();
 
 type WebsiteEvent = { url: string, id: string }
+type MessageType = {
+  id: string;
+  message: {
+    url: string;
+    id: string;
+  }
+}
 
 async function xAdd({url, id}: WebsiteEvent) {
   await client.xAdd(
@@ -29,7 +36,7 @@ export async function xAddBulk(website: WebsiteEvent[]) {
 }
 
 
-export async function xReadGroup(consumerGroup: string, workerId: string): Promise<any> {
+export async function xReadGroup(consumerGroup: string, workerId: string): Promise<MessageType[] | undefined> {
   const res = await client.xReadGroup(
     consumerGroup, workerId, {
       key: STREAM_NAME,
@@ -39,11 +46,17 @@ export async function xReadGroup(consumerGroup: string, workerId: string): Promi
     }
   )
 
-  return res
+  const messages: MessageType[] | undefined = res[0]?.messages;
+
+  return messages
 }
 
 export async function xAck(consumerGroup: string, eventId: string) {
   const res = await client.xAck(STREAM_NAME, consumerGroup, eventId)
 }
 
-
+export async function xAckBulk(consumerGroup: string, eventIds: string[]) {
+  eventIds.map((eventId) => {
+    return xAck(consumerGroup, eventId)
+  })
+}
