@@ -105,6 +105,14 @@ app.get("/websites", authMiddleware, async (req, res) => {
   const websites = await prismaclient.website.findMany({
     where: {
       user_id: req.userId
+    },
+    include: {
+      ticks: {
+        orderBy: [{
+          createdAt: "desc"
+        }],
+        take: 1
+      }
     }
   })
 
